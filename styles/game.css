@@ -32,11 +32,11 @@ body {
 
 #screen canvas {
     outline: none;
-	border: 2px solid #333;
+	border: 200px solid #333;
 }
 
 #screen canvas.focus {
-	border: 2px solid #888;
+	border: 200px solid #888;
 }
 
 #inventory {
