@@ -1,5 +1,5 @@
 function Player(x, y, __map, __game) {
-    /* private variables */
+
 
     var __x = x;
     var __y = y;
@@ -8,11 +8,11 @@ function Player(x, y, __map, __game) {
 
     var __display = __map._display;
 
-    /* unexposed variables */
+
 
     this._canMove = false;
 
-    /* wrapper */
+
 
     function wrapExposedMethod(f, player) {
         return function () {
@@ -23,7 +23,6 @@ function Player(x, y, __map, __game) {
         };
     };
 
-    /* exposed getters/setters */
 
     this.getX = function () { return __x; };
     this.getY = function () { return __y; };
@@ -35,19 +34,16 @@ function Player(x, y, __map, __game) {
         __display.drawAll(__map);
     });
 
-    /* unexposed methods */
-
-    // (used for teleporters)
+  
     this._moveTo = function (dynamicObject) {
         if (__game._isPlayerCodeRunning()) { throw 'Forbidden method call: player._moveTo()';}
 
-        // no safety checks or anything
-        // this method is about as safe as a war zone
+      
         __x = dynamicObject.getX();
         __y = dynamicObject.getY();
         __display.drawAll(__map);
 
-        // play teleporter sound
+       
         __game.sound.playSound('blip');
     };
 
@@ -56,14 +52,13 @@ function Player(x, y, __map, __game) {
 
         var player = this;
 
-        this._hasTeleported = false; // necessary to prevent bugs with teleportation
+        this._hasTeleported = false; 
 
         __map._hideChapter();
         __map._moveAllDynamicObjects();
 
         var onTransport = false;
 
-        // check for collision with transport object
         for (var i = 0; i < __map.getDynamicObjects().length; i++) {
             var object = __map.getDynamicObjects()[i];
             if (object.getX() === x && object.getY() === y) {
@@ -74,8 +69,7 @@ function Player(x, y, __map, __game) {
             }
         }
 
-        // check for collision with static object UNLESS
-        // we are on a transport
+      
         if (!onTransport) {
             var objectName = __map._getGrid()[x][y].type;
             var objectDef = __map._getObjectDefinition(objectName);
@@ -88,12 +82,12 @@ function Player(x, y, __map, __game) {
             }
         }
 
-        // check for collision with any lines on the map
+      
         __map.testLineCollisions(this);
 
-        // don't run checkObjective if validation has already failed to prevent duplicate `Validation failed` errors
+      
         if (!__map._callbackValidationFailed) {
-            // check for nonstandard victory condition (e.g. DOM level)
+            
             __game._checkObjective()
         }
     };
@@ -115,19 +109,19 @@ function Player(x, y, __map, __game) {
         }
     };
 
-    /* exposed methods */
+
 
     this.atLocation = wrapExposedMethod(function (x, y) {
         return (__x === x && __y === y);
     }, this);
 
     this.move = wrapExposedMethod(function (direction, fromKeyboard) {
-        if (!this._canMove) { // mainly for key delay
+        if (!this._canMove) { 
             return false;
         }
 
         if (fromKeyboard) {
-            // clear any status text
+            
             __map._status = "";
             if (__map._overrideKeys[direction]) {
                 try {
@@ -135,7 +129,7 @@ function Player(x, y, __map, __game) {
 
                     __map.refresh();
                     this._canMove = false;
-                    __map._reenableMovementForPlayer(this); // (key delay can vary by map)
+                    __map._reenableMovementForPlayer(this); 
                     this._afterMove(__x, __y);
                 } catch (e) {
                 }
@@ -181,16 +175,15 @@ function Player(x, y, __map, __game) {
             __lastMoveDirection = direction;
             this._afterMove(__x, __y);
 
-            __map._reenableMovementForPlayer(this); // (key delay can vary by map)
+            __map._reenableMovementForPlayer(this); 
         } else {
-            // play bump sound
+            
             __game.sound.playSound('select');
         }
     }, this);
 
     this.killedBy = wrapExposedMethod(function (killer) {
         if (__map._dummy) {
-            // Treat player death during StartLevel the same way as a validation failure to avoid nasty infinite loops
             throw "You have been killed by \n" + killer;
         }
         __game.sound.playSound('hurt');
@@ -216,7 +209,6 @@ function Player(x, y, __map, __game) {
         this._phoneFunc = func;
     }, this);
 
-    // call secureObject to prevent user code from tampering with private attributes
     __game.secureObject(this,"player");
 
 }
