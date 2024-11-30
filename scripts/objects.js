@@ -1,14 +1,4 @@
-/*
-Objects can have the following parameters:
-    color: '#fff' by default
-    impassable: true if it blocks the player from movement (false by default)
-    onCollision: function (player) called when player moves over the object
-    onPickUp: function (player) called when player picks up the item
-    symbol: Unicode character representing the object
-    type: 'item' or null
-*/
 
-// used by bonus levels 01 through 04
 function moveToward(obj, type) {
     var target = obj.findNearest(type);
     var leftDist = obj.getX() - target.x;
@@ -33,7 +23,7 @@ function moveToward(obj, type) {
     }
 }
 
-// used by bonus levels 01 through 04
+
 function followAndKeepDistance(obj, type) {
     var target = obj.findNearest(type);
     var leftDist = obj.getX() - target.x;
@@ -59,7 +49,6 @@ function followAndKeepDistance(obj, type) {
     }
 }
 
-// used by bonus levels 01 through 04
 function killPlayerIfTooFar(obj, map) {
     var target = obj.findNearest('player');
     var leftDist = obj.getX() - target.x;
@@ -73,7 +62,7 @@ function killPlayerIfTooFar(obj, map) {
 Game.prototype.getListOfObjects = function () {
     var game = this;
     return {
-        // special
+      
 
         'empty' : {
             'symbol': ' ',
@@ -86,7 +75,7 @@ Game.prototype.getListOfObjects = function () {
         },
 
         'exit' : {
-            'symbol' : String.fromCharCode(0x2395), // ⎕
+            'symbol' : String.fromCharCode(0x2395), 
             'color': '#0ff',
             'onCollision': function (player) {
                 if (!game.map.finalLevel) {
@@ -97,7 +86,7 @@ Game.prototype.getListOfObjects = function () {
             }
         },
 
-        // obstacles
+    
 
         'block': {
             'symbol': '#',
@@ -130,7 +119,7 @@ Game.prototype.getListOfObjects = function () {
 
         'teleporter': {
             'type': 'dynamic',
-            'symbol' : String.fromCharCode(0x2395), // ⎕
+            'symbol' : String.fromCharCode(0x2395), 
             'color': '#f0f',
             'onCollision': function (player, me) {
                 if (!player._hasTeleported) {
@@ -147,11 +136,10 @@ Game.prototype.getListOfObjects = function () {
             'behavior': null
         },
 
-        // items
-
+       
         'computer': {
             'type': 'item',
-            'symbol': String.fromCharCode(0x2318), // ⌘
+            'symbol': String.fromCharCode(0x2318), 
             'color': '#ccc',
             'onPickUp': function (player) {
                 $('#editorPane, #savedLevelMsg').fadeIn();
@@ -166,7 +154,7 @@ Game.prototype.getListOfObjects = function () {
         'phone': {
             'type': 'item',
             'minimumLevel': 7,
-            'symbol': String.fromCharCode(0x260E), // ☎
+            'symbol': String.fromCharCode(0x260E), 
             'onPickUp': function (player) {
                 game.map.writeStatus('You have picked up the function phone!');
                 $('#phoneButton').show();
@@ -229,7 +217,6 @@ Game.prototype.getListOfObjects = function () {
             }
         },
 
-        // used by bonus levels 01 through 04
         'eye': {
             'type': 'dynamic',
             'symbol': 'E',
@@ -242,8 +229,6 @@ Game.prototype.getListOfObjects = function () {
                 player.killedBy('"the eye"');
             },
         },
-
-        // used by bonus levels 01 through 04
         'guard': {
             'type': 'dynamic',
             'symbol': 'd',
