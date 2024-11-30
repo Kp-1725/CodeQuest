@@ -1,5 +1,5 @@
 function Map(display, __game) {
-    /* private variables */
+ 
 
     var __player;
     var __grid;
@@ -17,14 +17,13 @@ function Map(display, __game) {
     var __intervals = [];
     var __chapterHideTimeout;
 
-    /* unexposed variables */
+  
 
     this._properties = {};
     this._display = display;
-    this._dummy = false; // overridden by dummyMap in validate.js
+    this._dummy = false; 
     this._status = '';
 
-    /* wrapper */
 
     function wrapExposedMethod(f, map) {
         return function () {
@@ -35,7 +34,6 @@ function Map(display, __game) {
         };
     };
 
-    /* unexposed getters */
 
     this._getObjectDefinition = function(objName) {
         if (__game._isPlayerCodeRunning()) { throw 'Forbidden method call: map._getObjectDefinition()';}
@@ -54,10 +52,8 @@ function Map(display, __game) {
         return __lines;
     };
 
-    /* exposed getters */
-
     this.getDynamicObjects = function () {
-        // copy dynamic object list to fix issue#166
+
         var copy = [];
         for (var i = 0; i < __dynamicObjects.length; i++) {
             copy[i] = __dynamicObjects[i];
@@ -67,8 +63,6 @@ function Map(display, __game) {
     this.getPlayer = function () { return __player; };
     this.getWidth = function () { return __game._dimensions.width; };
     this.getHeight = function () { return __game._dimensions.height; };
-
-    /* unexposed methods */
 
     this._reset = function () {
         if (__game._isPlayerCodeRunning()) { throw 'Forbidden method call: map._reset()';}
@@ -95,7 +89,6 @@ function Map(display, __game) {
         __dom = '';
         this._overrideKeys = {};
 
-        // preload stylesheet for DOM level
         $.get('styles/dom.css', function (css) {
             __domCSS = css;
         });
@@ -114,15 +107,13 @@ function Map(display, __game) {
     this._ready = function () {
         if (__game._isPlayerCodeRunning()) { throw 'Forbidden method call: map._ready()';}
 
-        // set refresh rate if one is specified
+    
         if (__refreshRate) {
-            // wrapExposedMethod is necessary here to prevent the `_moveToNextLevel`
-            // call from breaking
+           
             this.startTimer(wrapExposedMethod(function () {
-                // refresh the map
+                
                 this.refresh();
 
-                // check for nonstandard victory condition
                  __game._checkObjective()
             }, this), __refreshRate);
         }
@@ -131,13 +122,13 @@ function Map(display, __game) {
     this._setProperties = function (mapProperties) {
         if (__game._isPlayerCodeRunning()) { throw 'Forbidden method call: map._setProperties()';}
 
-        // set defaults
+       
         this._properties = {};
         __allowOverwrite = false;
         __keyDelay = 0;
         __refreshRate = null;
 
-        // now set any properties that were passed in
+    
         if (mapProperties) {
             this._properties = mapProperties;
 
@@ -164,38 +155,37 @@ function Map(display, __game) {
             return false;
         }
 
-        // look for static objects that can serve as obstacles
         var objType = __grid[x][y].type;
         var object = __objectDefinitions[objType];
         if (object.impassable) {
             if (myType && object.passableFor && object.passableFor.indexOf(myType) > -1) {
-                // this object is of a type that can pass the obstacle
+              
                 return true;
             } else if (typeof object.impassable === 'function') {
-                // the obstacle is impassable only in certain circumstances
+               
                 return this._validateCallback(function () {
                     return !object.impassable(__player, object);
                 });
             } else {
-                // the obstacle is always impassable
+               
                 return false;
             }
         } else if (myType && object.impassableFor && object.impassableFor.indexOf(myType) > -1) {
-            // this object is of a type that cannot pass the obstacle
+            
             return false;
         } else {
-            // no obstacle
+          
             return true;
         }
     };
 
-    // Returns the object of the given type closest to target coordinates
+   
     this._findNearestToPoint = function (type, targetX, targetY) {
         if (__game._isPlayerCodeRunning()) { throw 'Forbidden method call: map._findNearestToPoint()';}
 
         var foundObjects = [];
 
-        // look for static objects
+    
         for (var x = 0; x < this.getWidth(); x++) {
             for (var y = 0; y < this.getHeight(); y++) {
                 if (__grid[x][y].type === type) {
@@ -204,7 +194,7 @@ function Map(display, __game) {
             }
         }
 
-        // look for dynamic objects
+       
         for (var i = 0; i < __dynamicObjects.length; i++) {
             var object = __dynamicObjects[i];
             if (object.getType() === type) {
@@ -212,7 +202,7 @@ function Map(display, __game) {
             }
         }
 
-        // look for player
+      
         if (type === 'player') {
             foundObjects.push({x: __player.getX(), y: __player.getY()});
         }
@@ -222,7 +212,7 @@ function Map(display, __game) {
             var obj = foundObjects[i];
             dists[i] = Math.sqrt(Math.pow(targetX - obj.x, 2) + Math.pow(targetY - obj.y, 2));
 
-            // We want to find objects distinct from ourselves
+           
             if (dists[i] === 0) {
                 dists[i] = 999;
             }
@@ -265,26 +255,20 @@ function Map(display, __game) {
     this._moveAllDynamicObjects = function () {
         if (__game._isPlayerCodeRunning()) { throw 'Forbidden method call: map._moveAllDynamicObjects()';}
 
-        // the way things work right now, teleporters must take precedence
-        // over all other objects -- otherwise, pointers.jsx will not work
-        // correctly.
-        // TODO: make this not be the case
-
-        // "move" teleporters
+       
         __dynamicObjects.filter(function (object) {
             return (object.getType() === 'teleporter');
         }).forEach(function(object) {
             object._onTurn();
         });
 
-        // move everything else
+       
         __dynamicObjects.filter(function (object) {
             return (object.getType() !== 'teleporter');
         }).forEach(function(object) {
             object._onTurn();
         });
 
-        // refresh only at the end
         this.refresh();
     };
 
@@ -311,8 +295,7 @@ function Map(display, __game) {
     this._hideChapter = function() {
         if (__game._isPlayerCodeRunning()) { throw 'Forbidden method call: map._hideChapter()';}
 
-        // start fading out chapter immediately
-        // unless it's a death message, in which case wait 2.5 sec
+       
         clearInterval(__chapterHideTimeout);
         __chapterHideTimeout = setTimeout(function () {
             $('#chapter').fadeOut(1000);
@@ -331,7 +314,7 @@ function Map(display, __game) {
         return __intervals.length;
     }
 
-    /* (unexposed) wrappers for game methods */
+
 
     this._startOfStartLevelReached = function() {
         __game._startOfStartLevelReached = true;
@@ -353,7 +336,6 @@ function Map(display, __game) {
         return __game.validateCallback(callback);
     };
 
-    /* exposed methods */
 
     this.refresh = wrapExposedMethod(function () {
         if (__dom) {
@@ -368,7 +350,7 @@ function Map(display, __game) {
         } else {
             this._display.drawAll(this);
         }
-        // rewrite any status messages
+        
         if (this._status) {
             this._display.writeStatus(this._status);
         }
@@ -378,7 +360,7 @@ function Map(display, __game) {
     this.countObjects = wrapExposedMethod(function (type) {
         var count = 0;
 
-        // count static objects
+      
         for (var x = 0; x < this.getWidth(); x++) {
             for (var y = 0; y < this.getHeight(); y++) {
                 if (__grid[x][y].type === type) {
@@ -387,7 +369,6 @@ function Map(display, __game) {
             }
         }
 
-        // count dynamic objects
         __dynamicObjects.forEach(function (obj) {
             if (obj.getType() === type) {
                 count++;
@@ -414,14 +395,14 @@ function Map(display, __game) {
 
         if (typeof(__grid[x]) === 'undefined' || typeof(__grid[x][y]) === 'undefined') {
             return;
-            // throw "Not a valid location to place an object!";
+          
         }
 
         if (__objectDefinitions[type].type === 'dynamic') {
-            // dynamic object
+          
             __dynamicObjects.push(new DynamicObject(this, type, x, y, __game));
         } else {
-            // static object
+         
             if (__grid[x][y].type === 'empty' || __grid[x][y].type === type || __allowOverwrite) {
                 __grid[x][y].type = type;
             } else {
@@ -477,7 +458,7 @@ function Map(display, __game) {
     this.getObjectTypeAt = wrapExposedMethod(function (x, y) {
         var x = Math.floor(x); var y = Math.floor(y);
 
-        // Bazek: We should always check, if the coordinates are inside of map!
+      
         if (x >= 0 && x < this.getWidth() && y >= 0 && y < this.getHeight())
             return __grid[x][y].type;
         else
@@ -505,7 +486,7 @@ function Map(display, __game) {
                     var child = [x, y-1];
                     break;
             }
-            // Bazek: We need to check, if child is inside of map!
+            
             var childInsideMap = child[0] >= 0 && child[0] < map.getWidth() && child[1] >= 0 && child[1] < map.getHeight();
             if (childInsideMap && map.getObjectTypeAt(child[0], child[1]) === 'empty') {
                 adjacentEmptyCells.push([child, action]);
@@ -553,7 +534,7 @@ function Map(display, __game) {
 
     this.writeStatus = wrapExposedMethod(function(status) {
         if (this._status) {
-            // refresh to hide the old status message
+         
             this._status = "";
             this.refresh();
         }
@@ -561,14 +542,10 @@ function Map(display, __game) {
         this._display.writeStatus(status);
     }, this);
 
-    // used by validators
-    // returns true iff called at the start of the level (that is, on DummyMap)
-    // returns false iff called by validateCallback (that is, on the actual map)
     this.isStartOfLevel = wrapExposedMethod(function () {
         return this._dummy;
     }, this);
 
-    /* canvas-related stuff */
 
     this.getCanvasContext = wrapExposedMethod(function() {
         var ctx = $('#drawingCanvas')[0].getContext('2d');
@@ -628,7 +605,7 @@ function Map(display, __game) {
         })
     }, this);
 
-    /* for DOM manipulation level */
+
 
     this.getDOM = wrapExposedMethod(function () {
         return __dom;
@@ -645,8 +622,6 @@ function Map(display, __game) {
     this.overrideKey = wrapExposedMethod(function(keyName, callback) {
         this._overrideKeys[keyName] = callback;
     }, this);
-
-    /* validators */
 
     this.validateAtLeastXObjects = wrapExposedMethod(function(num, type) {
         var count = this.countObjects(type);
@@ -690,10 +665,9 @@ function Map(display, __game) {
         }
     }, this);
 
-    /* initialization */
+ 
 
     this._reset();
 
-    // call secureObject to prevent user code from tampering with private attributes
     __game.secureObject(this, "map");
 }
