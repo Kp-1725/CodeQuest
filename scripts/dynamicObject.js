@@ -1,5 +1,5 @@
 function DynamicObject(map, type, x, y, __game) {
-    /* private variables */
+
 
     var __x = x;
     var __y = y;
@@ -14,7 +14,7 @@ function DynamicObject(map, type, x, y, __game) {
 
     this._map = map;
 
-    /* wrapper */
+   
 
     function wrapExposedMethod(f, object) {
         return function () {
@@ -25,7 +25,6 @@ function DynamicObject(map, type, x, y, __game) {
         };
     };
 
-    /* unexposed methods */
 
     this._computeDestination = function (startX, startY, direction) {
         if (__game._isPlayerCodeRunning()) { throw 'Forbidden method call: object._computeDestination()';}
@@ -58,10 +57,7 @@ function DynamicObject(map, type, x, y, __game) {
             __myTurn = true;
 
             try {
-                //we need to check for a collision with the player *after*
-                //the player has moved but *before* the object itself moves
-                //this prevents a bug where players and objects can 'pass through'
-                //each other
+            
                 if (__x === player.getX() && __y === player.getY()) {
                     if (__definition.pushable) {
                         me.move(player.getLastMoveDirection());
@@ -79,23 +75,23 @@ function DynamicObject(map, type, x, y, __game) {
                     });
                 }
             } catch (e) {
-                // throw e; // for debugging
+               
                 map.writeStatus(e.toString());
             }
         }
 
         if (__definition.interval) {
-            // start timer if not already set
+         
             if (!__timer) {
                 __timer = setInterval(executeTurn, __definition.interval);
             }
 
-            // don't move on regular turn, but still check for player collision
+            
             if (map.getPlayer().atLocation(__x, __y) &&
                     (__definition.onCollision || __definition.projectile)) {
-                // trigger collision
+                
                 if (__definition.projectile) {
-                    // projectiles automatically kill
+                 
                     map.getPlayer().killedBy('a ' + __type);
                 } else {
                     var thing = this;
@@ -112,7 +108,7 @@ function DynamicObject(map, type, x, y, __game) {
     this._afterMove = function () {
         if (__game._isPlayerCodeRunning()) { throw 'Forbidden method call: object._afterMove()';}
 
-        // try to pick up items
+      
         var objectName = map._getGrid()[__x][__y].type;
         var object = map._getObjectDefinition(objectName);
         if (object.type === 'item' && !__definition.projectile) {
@@ -120,7 +116,6 @@ function DynamicObject(map, type, x, y, __game) {
             map._removeItemFromMap(__x, __y, objectName);
             map._playSound('pickup');
         } else if (object.type === 'trap') {
-            // this part is used by janosgyerik's bonus levels
             if (object.deactivatedBy && object.deactivatedBy.indexOf(__type) > -1) {
                 if (typeof(object.onDeactivate) === 'function') {
                     __game.validateCallback(function(){
@@ -140,11 +135,8 @@ function DynamicObject(map, type, x, y, __game) {
         __destroyed = true;
         clearInterval(__timer);
 
-        // remove this object from map's __dynamicObjects list
+       
         map._refreshDynamicObjects();
-
-        // unless the map is being reset, play an explosion
-        // and call this object's onDestroy method
         if (__definition.onDestroy && !onMapReset) {
             if (!__definition.projectile) {
                 map._playSound('explosion');
@@ -155,8 +147,6 @@ function DynamicObject(map, type, x, y, __game) {
             });
         }
     };
-
-    /* exposed methods */
 
     this.getX = function () { return __x; };
     this.getY = function () { return __y; };
@@ -186,12 +176,12 @@ function DynamicObject(map, type, x, y, __game) {
 
         var nearestObj = map._findNearestToPoint("anyDynamic", dest.x, dest.y);
 
-        // check for collision with player
+    
         if (map.getPlayer().atLocation(dest.x, dest.y) &&
                 (__definition.onCollision || __definition.projectile)) {
-            // trigger collision
+          
             if (__definition.projectile) {
-                // projectiles automatically kill
+              
                 map.getPlayer().killedBy('a ' + __type);
             } else {
                 var thing = this;
@@ -201,17 +191,15 @@ function DynamicObject(map, type, x, y, __game) {
             }
         } else if (map._canMoveTo(dest.x, dest.y, __type) &&
                 !map._isPointOccupiedByDynamicObject(dest.x, dest.y)) {
-            // move the object
+           
             __x = dest.x;
             __y = dest.y;
             this._afterMove(__x, __y);
         } else {
-            // cannot move
+           
             if (__definition.projectile) {
-                // projectiles disappear when they cannot move
                 this._destroy();
 
-                // projectiles also destroy any dynamic objects they touch
                 if (map._isPointOccupiedByDynamicObject(dest.x, dest.y)) {
                     map._findDynamicObjectAtPoint(dest.x, dest.y)._destroy();
                 }
@@ -224,8 +212,6 @@ function DynamicObject(map, type, x, y, __game) {
     this.canMove = wrapExposedMethod(function (direction) {
         var dest = this._computeDestination(__x, __y, direction);
 
-        // check if the object can move there and will not collide with
-        // another dynamic object
         return (map._canMoveTo(dest.x, dest.y, __type) &&
             !map._isPointOccupiedByDynamicObject(dest.x, dest.y));
     }, this);
@@ -234,7 +220,7 @@ function DynamicObject(map, type, x, y, __game) {
         return map._findNearestToPoint(type, __x, __y);
     }, this);
 
-    // only for teleporters
+   
     this.setTarget = wrapExposedMethod(function (target) {
         if (__type != 'teleporter') {
             throw 'setTarget() can only be called on a teleporter!';
@@ -247,10 +233,9 @@ function DynamicObject(map, type, x, y, __game) {
         this.target = target;
     }, this);
 
-    // call secureObject to prevent user code from tampering with private attributes
+   
     __game.secureObject(this, type);
 
-    // constructor
 
     if (!map._dummy && __definition.interval) {
         this._onTurn();
