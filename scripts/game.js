@@ -1,11 +1,9 @@
 function Game(debugMode, startLevel) {
-    /* private properties */
-
+   
     var __currentCode = '';
     var __commands = [];
     var __playerCodeRunning = false;
 
-    /* unexposed properties */
 
     this._dimensions = {
         width: 50,
@@ -13,12 +11,12 @@ function Game(debugMode, startLevel) {
     };
 
     this._levelFileNames = [
-//%LEVELS%
+
     ];
 
     this._bonusLevels = [
-//%BONUS%
-    ].filter(function (lvl) { return (lvl.indexOf('_') != 0); }); // filter out bonus levels that start with '_'
+
+    ].filter(function (lvl) { return (lvl.indexOf('_') != 0); }); 
 
     this._mod = '//%MOD%';
 
@@ -51,29 +49,27 @@ function Game(debugMode, startLevel) {
     this._levelReached = 1;
     this._displayedChapters = [];
 
-    this._playerPrototype = Player; // to allow messing with map.js and player.js later
+    this._playerPrototype = Player; 
 
     this._nextBonusLevel = null;
 
-    /* unexposed getters */
+  
 
     this._getHelpCommands = function () { return __commands; };
     this._isPlayerCodeRunning = function () { return __playerCodeRunning; };
     this._getLocalKey = function (key) { return (this._mod.length == 0 ? '' : this._mod + '.') + key; };
 
-    /* unexposed setters */
 
     this._setPlayerCodeRunning = function (pcr) { __playerCodeRunning = pcr; };
 
-    /* unexposed methods */
+   
 
     this._initialize = function () {
-        // Get last level reached from localStorage (if any)
+      
         var levelKey = this._mod.length == 0 ? 'levelReached' : this._mod + '.levelReached';
         this._levelReached = parseInt(localStorage.getItem(levelKey)) || 1;
 
-        // Fix potential corruption
-        // levelReached may be "81111" instead of "8" due to bug
+    
         if (this._levelReached > this._levelFileNames.length) {
             for (var l = 1; l <= this._levelFileNames.length; l++) {
                 if (!localStorage[this._getLocalKey("level" + l + ".lastGoodState")]) {
@@ -83,11 +79,9 @@ function Game(debugMode, startLevel) {
             }
         }
 
-        // Initialize sound
+     
         this.sound = new Sound('local');
-        // this.sound = new Sound(debugMode ? 'local' : 'cloudfront');
-
-        // Initialize map display
+       
         this.display = ROT.Display.create(this, {
             width: this._dimensions.width,
             height: this._dimensions.height,
@@ -100,35 +94,35 @@ function Game(debugMode, startLevel) {
             display.focus();
         });
 
-        // Initialize editor, map, and objects
+      
         this.editor = new CodeEditor("editor", 600, 500, this);
         this.map = new Map(this.display, this);
         this.objects = this.getListOfObjects();
 
-        // Enable controls
+      
         this.enableShortcutKeys();
         this.enableButtons();
         this.setUpNotepad();
 
-        // Load help commands from local storage (if possible)
+     
         if (localStorage.getItem(this._getLocalKey('helpCommands'))) {
             __commands = localStorage.getItem(this._getLocalKey('helpCommands')).split(';');
         }
 
-        // Enable debug features
+      
         if (debugMode) {
             this._debugMode = true;
-            this._levelReached = 999; // make all levels accessible
-            __commands = Object.keys(this.reference); // display all help
-            this.sound.toggleSound(); // mute sound by default in debug mode
+            this._levelReached = 999; 
+            __commands = Object.keys(this.reference);
+            this.sound.toggleSound(); 
         }
 
-        // Lights, camera, action
+      
         if (startLevel) {
             this._currentLevel = startLevel - 1;
             this._getLevel(startLevel, debugMode);
         } else if (!debugMode && this._levelReached != 1) {
-            // load last level reached (unless it's the credits)
+          
             this._getLevel(Math.min(this._levelReached, 21));
         } else {
             this._intro();
@@ -145,7 +139,7 @@ function Game(debugMode, startLevel) {
     };
 
     this._moveToNextLevel = function () {
-        // is the player permitted to exit?
+    
         if (typeof this.onExit === 'function') {
             var game = this;
             var canExit = this.validateCallback(function () {
@@ -159,14 +153,14 @@ function Game(debugMode, startLevel) {
 
         this.sound.playSound('complete');
 
-        //we disable moving so the player can't move during the fadeout
+     
         this.map.getPlayer()._canMove = false;
 
         if (this._currentLevel == 'bonus') {
             if (this._nextBonusLevel) {
                 this._getLevelByPath("levels/bonus/" + this._nextBonusLevel);
             } else {
-                // open main menu
+
                 $('#helpPane, #notepadPane').hide();
                 $('#menuPane').show();
             }
@@ -182,8 +176,7 @@ function Game(debugMode, startLevel) {
         this.sound.playSound('blip');
     };
 
-    // makes an ajax request to get the level text file and
-    // then loads it into the game
+   
     this._getLevel = function (levelNum, isResetting, movingToNextLevel) {
         var game = this;
         var editor = this.editor;
@@ -201,7 +194,7 @@ function Game(debugMode, startLevel) {
 
         lvlCode = this._levels['levels/' + fileName];
         if (movingToNextLevel) {
-            // save level state and create a gist
+         
             editor.saveGoodState();
             editor.createGist();
         }
@@ -210,16 +203,16 @@ function Game(debugMode, startLevel) {
         game._currentBonusLevel = null;
         game._currentFile = null;
 
-        // load level code in editor
+     
         editor.loadCode(lvlCode);
 
-        // restored saved state for this level?
+     
         if (!isResetting && editor.getGoodState(levelNum)) {
-            // unless the current level is a newer version
+        
             var newVer = editor.getProperties().version;
             var savedVer = editor.getGoodState(levelNum).version;
             if (!(newVer && (!savedVer || isNewerVersion(newVer, savedVer)))) {
-                // restore saved line/section/endOfStartLevel state if possible
+               
                 if (editor.getGoodState(levelNum).endOfStartLevel) {
                     editor.setEndOfStartLevel(editor.getGoodState(levelNum).endOfStartLevel);
                 }
@@ -230,16 +223,16 @@ function Game(debugMode, startLevel) {
                     editor.setEditableSections(editor.getGoodState(levelNum).editableSections);
                 }
 
-                // restore saved code
+               
                 editor.setCode(editor.getGoodState(levelNum).code);
             }
         }
 
-        // start the level and fade in
+       
         game._evalLevelCode(null, null, true);
         game.display.focus();
 
-        // store the commands introduced in this level (for api reference)
+       
         __commands = __commands.concat(editor.getProperties().commandsIntroduced).unique();
         localStorage.setItem(this._getLocalKey('helpCommands'), __commands.join(';'));
     };
@@ -253,24 +246,24 @@ function Game(debugMode, startLevel) {
             game._currentBonusLevel = filePath.split("levels/")[1];
             game._currentFile = null;
 
-            // load level code in editor
+        
             editor.loadCode(lvlCode);
 
-            // save next bonus level
+        
             game._nextBonusLevel = editor.getProperties()["nextBonusLevel"];
 
-            // start the level and fade in
+          
             game._evalLevelCode(null, null, true);
             game.display.focus();
 
-            // store the commands introduced in this level (for api reference)
+            
             __commands = __commands.concat(editor.getProperties().commandsIntroduced).unique();
             localStorage.setItem(this._getLocalKey('helpCommands'), __commands.join(';'));
         }, 'text');
 
     };
 
-    // how meta can we go?
+  
     this._editFile = function (filePath) {
         var game = this;
 
@@ -278,7 +271,7 @@ function Game(debugMode, startLevel) {
         game._currentFile = filePath;
 
         $.get(filePath, function (code) {
-            // load level code in editor
+           
             if (game._editableScripts.indexOf(fileName) > -1) {
                 game.editor.loadCode('#BEGIN_EDITABLE#\n' + code + '\n#END_EDITABLE#');
             } else {
@@ -320,7 +313,7 @@ function Game(debugMode, startLevel) {
         }
     };
 
-    // restart level with currently loaded code
+   
     this._restartLevel = function () {
         this.editor.setCode(__currentCode);
         this._evalLevelCode();
@@ -330,7 +323,7 @@ function Game(debugMode, startLevel) {
         this.map._clearIntervals();
         var game = this;
 
-        // by default, get code from the editor
+    
         var loadedFromEditor = false;
         if (!allCode) {
             allCode = this.editor.getCode();
@@ -338,29 +331,27 @@ function Game(debugMode, startLevel) {
             loadedFromEditor = true;
         }
 
-        // if we're editing a script file, do something completely different
+       
         if (this._currentFile !== null && !restartingLevelFromScript) {
             __currentCode = allCode;
             this.validateAndRunScript(allCode);
             return;
         }
 
-        // save current display state (for scrolling up later)
+       
         this.display.saveGrid(this.map);
 
-        // validate the code
-        // if it passes validation, returns the startLevel function if it pass
-        // if it fails validation, returns false
+        
         var validatedStartLevel = this.validate(allCode, playerCode, restartingLevelFromScript);
 
-        if (validatedStartLevel) { // code is valid
-            // reset the map
-            this.map._reset(); // for cleanup
+        if (validatedStartLevel) { 
+           
+            this.map._reset(); 
             this.map = new Map(this.display, this);
             this.map._reset();
             this.map._setProperties(this.editor.getProperties()['mapProperties']);
 
-            // save editor state
+           
             if (!restartingLevelFromScript) {
                 __currentCode = allCode;
             }
@@ -368,7 +359,7 @@ function Game(debugMode, startLevel) {
                 this.editor.saveGoodState();
             }
 
-            // clear drawing canvas and hide it until level loads
+           
             var screenCanvas = $('#screen canvas')[0];
             $('#drawingCanvas')[0].width = screenCanvas.width;
             $('#drawingCanvas')[0].height = screenCanvas.height;
@@ -388,19 +379,17 @@ function Game(debugMode, startLevel) {
                 this.editor.refresh();
             }
 
-            // draw the map
+         
             this.display.fadeIn(this.map, isNewLevel ? 100 : 10, function () {
-                game.map.refresh(); // refresh inventory display
-
-                // show map overlays if necessary
+                game.map.refresh(); 
+              
                 if (game.map._properties.showDrawingCanvas) {
                     $('#drawingCanvas').show();
                 } else if (game.map._properties.showDummyDom) {
                     $('#dummyDom').show();
                 }
 
-                // workaround because we can't use writeStatus() in startLevel()
-                // (due to the text getting overwritten by the fade-in)
+                
                 if (game.editor.getProperties().startingMessage) {
                     game.map.writeStatus(game.editor.getProperties().startingMessage);
                 }
@@ -408,26 +397,25 @@ function Game(debugMode, startLevel) {
 
             this.map._ready();
 
-            // start bg music for this level
+          
             if (this.editor.getProperties().music) {
                 this.sound.playTrackByName(this.editor.getProperties().music);
             }
 
-            // activate super menu if 21_endOfTheLine has been reached
+          
             if (this._levelReached >= 21) {
                 this.activateSuperMenu();
             }
 
-            // finally, allow player movement
+          
             if (this.map.getPlayer()) {
                 this.map.getPlayer()._canMove = true;
                 game.display.focus();
             }
-        } else { // code is invalid
-            // play error sound
+        } else { 
             this.sound.playSound('static');
 
-            // disable player movement
+           
             this.map.getPlayer()._canMove = false;
         }
     };
