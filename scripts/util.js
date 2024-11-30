@@ -15,7 +15,7 @@ function getParameterByName(name) {
 }
 
 Array.prototype.remove = function(item) {
-    // TODO Update to use Array.prototype.indexOf
+  
     for(var i = this.length; i--;) {
         if(this[i] === item) {
             this.splice(i, 1);
@@ -35,8 +35,7 @@ Array.prototype.unique = function() {
     return a;
 };
 
-// Distance from point to line
-// http://stackoverflow.com/a/6853926/2608804
+
 function pDistance(x, y, x1, y1, x2, y2) {
     var A = x - x1;
     var B = y - y1;
@@ -67,28 +66,7 @@ function pDistance(x, y, x1, y1, x2, y2) {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-/**
- * jQuery.fn.sortElements
- *
- * from http://james.padolsey.com/javascript/sorting-elements-with-jquery
- * --------------
- * @param Function comparator:
- *   Exactly the same behaviour as [1,2,3].sort(comparator)
- *
- * @param Function getSortable
- *   A function that should return the element that is
- *   to be sorted. The comparator will run on the
- *   current collection, but you may want the actual
- *   resulting sort to occur on a parent or another
- *   associated element.
- *
- *   E.g. $('td').sortElements(comparator, function(){
- *      return this.parentNode;
- *   })
- *
- *   The <td>'s parent (<tr>) will be sorted instead
- *   of the <td> itself.
- */
+
 jQuery.fn.sortElements = (function(){
 
     var sort = [].sort;
@@ -102,9 +80,6 @@ jQuery.fn.sortElements = (function(){
             var sortElement = getSortable.call(this),
                 parentNode = sortElement.parentNode,
 
-                // Since the element itself will change position, we have
-                // to have some way of storing its original position in
-                // the DOM. The easiest way is to have a 'flag' node:
                 nextSibling = parentNode.insertBefore(
                     document.createTextNode(''),
                     sortElement.nextSibling
@@ -118,9 +93,9 @@ jQuery.fn.sortElements = (function(){
                     );
                 }
 
-                // Insert before flag:
+               
                 parentNode.insertBefore(this, nextSibling);
-                // Remove flag:
+              
                 parentNode.removeChild(nextSibling);
 
             };
@@ -135,7 +110,6 @@ jQuery.fn.sortElements = (function(){
 
 })();
 
-// http://stackoverflow.com/a/20095486/2608804
 function isNewerVersion(v1, v2) {
     "use strict";
     var v1parts = v1.split('.'), v2parts = v2.split('.');
