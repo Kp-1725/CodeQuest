@@ -229,7 +229,7 @@ Game.prototype.openHelp = function () {
     $('#helpPaneSidebar ul').html('');
     $('#helpPaneContent').html('');
 
-    // build help
+    
     $.each(game._getHelpCommands(), function (i, command) {
         if (game.reference[command]) {
             var reference = game.reference[command];
@@ -264,7 +264,7 @@ Game.prototype.openHelp = function () {
         }
     });
 
-    // sort help commands
+
     $('#helpPaneContent .category').each(function (i, category) {
         $(category).find('.command').sortElements(function (a, b) {
             var contentA = $(a).find('.commandTitle').text();
