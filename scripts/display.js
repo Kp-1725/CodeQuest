@@ -231,28 +231,6 @@ ROT.Display.prototype.focus = function() {
 
 
 ROT.Display.prototype.renderDom = function(html, css) {
-    // using ideas from http://robert.ocallahan.org/2011/11/drawing-dom-content-to-canvas.html
-    /*var canvas = $('#drawingCanvas')[0];
-    var ctx = canvas.getContext("2d");
-    canvas.width = canvas.width; //resets background of canvas
-    var data = "data:image/svg+xml," +
-               "<svg xmlns='http://www.w3.org/2000/svg' width='" + canvas.width + "' height='" + canvas.height + "'>" +
-                 "<foreignObject width='100%' height='100%'>" +
-                   "<style type='text/css'>" + css + "</style>" +
-                   "<div xmlns='http://www.w3.org/1999/xhtml'>" +
-                        html +
-                   "</div>" +
-                 "</foreignObject>" +
-               "</svg>";
-    //console.log(data);
-    var img = new Image();
-    img.src = data;
-    //console.log(img);
-    img.onload = function() {
-        ctx.drawImage(img, 0, 0);
-    }*/
-
-    // drawing DOM to canvas doesn't work in many browsers, so
-    // we fall back to basic DOM rendering
-    $(dummyDom).html(html); // DOM CSS now resides in game.css with everything else
+ 
+    $(dummyDom).html(html); 
 }
