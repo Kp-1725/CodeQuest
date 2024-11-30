@@ -31,15 +31,14 @@ function CodeEditor(textAreaDomID, width, height, game) {
         editableSections = es;
     }
 
-    // for debugging purposes
+  
     log = function (text) {
         if (game._debugMode) {
             console.log(text);
         }
     }
 
-    // preprocesses code,determines the location
-    // of editable lines and sections, loads properties
+
     function preprocess(codeString) {
         editableLines = [];
         editableSections = {};
@@ -54,9 +53,8 @@ function CodeEditor(textAreaDomID, width, height, game) {
         for (var i = 0; i < lineArray.length; i++) {
             var currentLine = lineArray[i];
 
-            // process properties
             if (currentLine.indexOf(symbols.begin_properties) === 0) {
-                lineArray.splice(i,1); // be aware that this *mutates* the list
+                lineArray.splice(i,1);
                 i--;
                 inPropertiesBlock = true;
             } else if (currentLine.indexOf(symbols.end_properties) === 0) {
@@ -68,7 +66,7 @@ function CodeEditor(textAreaDomID, width, height, game) {
                 i--;
                 propertiesString += currentLine;
             }
-            // process editable lines and sections
+            
               else if (currentLine.indexOf(symbols.begin_line) === 0) {
                 lineArray.splice(i,1);
                 i--;
@@ -78,24 +76,24 @@ function CodeEditor(textAreaDomID, width, height, game) {
                 i--;
                 inEditableBlock = false;
             }
-            // process start of startLevel()
+            
               else if (currentLine.indexOf(symbols.start_start_level) === 0) {
                 lineArray.splice(i,1);
                 startOfStartLevel = i;
                 i--;
             }
-            // process end of startLevel()
+         
               else if (currentLine.indexOf(symbols.end_start_level) === 0) {
                 lineArray.splice(i,1);
                 endOfStartLevel = i;
                 i--;
             }
-            // everything else
+          
               else {
                 if (inEditableBlock) {
                     editableLines.push(i);
                 } else {
-                    // check if there are any editable sections
+                   
                     var sections = [];
                     var startPoint = null;
                     for (var j = 0; j < currentLine.length - 2; j++) {
@@ -125,9 +123,7 @@ function CodeEditor(textAreaDomID, width, height, game) {
     }
 
     var findEndOfSegment = function(line) {
-        // Given an editable line number, returns the last line of the
-        // given line's editable segment.
-
+        
         if (editableLines.indexOf(line + 1) === -1) {
             return line;
         }
@@ -136,8 +132,7 @@ function CodeEditor(textAreaDomID, width, height, game) {
     };
 
     var shiftLinesBy = function(array, after, shiftAmount) {
-        // Shifts all line numbers strictly after the given line by
-        // the provided amount.
+        
 
         return array.map(function(line) {
             if (line > after) {
@@ -148,18 +143,17 @@ function CodeEditor(textAreaDomID, width, height, game) {
         });
     };
 
-    // enforces editing restrictions when set as the handler
-    // for the 'beforeChange' event
+  
     var enforceRestrictions = function(instance, change) {
         lastChange = change;
 
         var inEditableArea = function(c) {
             var lineNum = c.to.line;
             if (editableLines.indexOf(lineNum) !== -1 && editableLines.indexOf(c.from.line) !== -1) {
-                // editable lines?
+              
                 return true;
             } else if (editableSections[lineNum]) {
-                // this line has editable sections - are we in one of them?
+              
                 var sections = editableSections[lineNum];
                 for (var i = 0; i < sections.length; i++) {
                     var section = sections[i];
@@ -183,10 +177,9 @@ function CodeEditor(textAreaDomID, width, height, game) {
         if (!inEditableArea(change)) {
             change.cancel();
         } else if (change.to.line < change.from.line ||
-                   change.to.line - change.from.line + 1 > change.text.length) { // Deletion
+                   change.to.line - change.from.line + 1 > change.text.length) { 
             updateEditableLinesOnDeletion(change);
-        } else { // Insert/paste
-            // First line already editable
+        } else { 
             var newLines = change.text.length - (change.to.line - change.from.line + 1);
 
             if (newLines > 0) {
@@ -195,15 +188,15 @@ function CodeEditor(textAreaDomID, width, height, game) {
                     return;
                 }
 
-                // enforce 80-char limit by wrapping all lines > 80 chars
+            
                 var wrappedText = [];
                 change.text.forEach(function (line) {
                     while (line.length > charLimit) {
-                        // wrap lines at spaces if at all possible
+                        
                         var minCutoff = charLimit - 20;
                         var cutoff = minCutoff + line.slice(minCutoff).indexOf(" ");
                         if (cutoff > 80) {
-                            // no suitable cutoff point found - let's get messy
+                           
                             cutoff = 80;
                         }
                         wrappedText.push(line.substr(0, cutoff));
@@ -213,12 +206,12 @@ function CodeEditor(textAreaDomID, width, height, game) {
                 });
                 change.text = wrappedText;
 
-                // updating line count
+               
                 newLines = change.text.length - (change.to.line - change.from.line + 1);
 
                 updateEditableLinesOnInsert(change, newLines);
             } else {
-                // enforce 80-char limit by trimming the line
+             
                 var lineLength = instance.getLine(change.to.line).length;
                 if (lineLength + change.text[0].length > charLimit) {
                     var allowedLength = Math.max(charLimit - lineLength, 0);
@@ -226,13 +219,12 @@ function CodeEditor(textAreaDomID, width, height, game) {
                 }
             }
 
-            // modify editable sections accordingly
-            // TODO Probably broken by multiline paste
+      
             var sections = editableSections[change.to.line];
             if (sections) {
                 var delta = change.text[0].length - (change.to.ch - change.from.ch);
                 for (var i = 0; i < sections.length; i++) {
-                    // move any section start/end points that we are to the left of
+                    
                     if (change.to.ch < sections[i][1]) {
                         sections[i][1] += delta;
                     }
@@ -249,48 +241,42 @@ function CodeEditor(textAreaDomID, width, height, game) {
     var updateEditableLinesOnInsert = function(change, newLines) {
         var lastLine = findEndOfSegment(change.to.line);
 
-        // Shift editable line numbers after this segment
+        
         editableLines = shiftLinesBy(editableLines, lastLine, newLines);
 
-        // TODO If editable sections appear together with editable lines
-        // in a level, multiline edit does not properly handle editable
-        // sections.
+       
 
         log("Appending " + newLines + " lines");
 
-        // Append new lines
+       
         for (var i = lastLine + 1; i <= lastLine + newLines; i++) {
             editableLines.push(i);
         }
 
-        // Update endOfStartLevel
+      
         if (endOfStartLevel) {
             endOfStartLevel += newLines;
         }
     };
 
     var updateEditableLinesOnDeletion = function(changeInput) {
-        // Figure out how many lines just got removed
+       
         var numRemoved = changeInput.to.line - changeInput.from.line - changeInput.text.length + 1;
-        // Find end of segment
+    
         var editableSegmentEnd = findEndOfSegment(changeInput.to.line);
-        // Remove that many lines from its end, one by one
+       
         for (var i = editableSegmentEnd; i > editableSegmentEnd - numRemoved; i--) {
             log('Removing\t' + i);
             editableLines.remove(i);
         }
-        // Shift lines that came after
+       
         editableLines = shiftLinesBy(editableLines, editableSegmentEnd, -numRemoved);
-        // TODO Shift editableSections
-
-        // Update endOfStartLevel
+      
         if (endOfStartLevel) {
             endOfStartLevel -= numRemoved;
         }
     };
 
-    // beforeChange events don't pick up undo/redo
-    // so we track them on change event
     var trackUndoRedo = function(instance, change) {
         if (change.origin === 'undo' || change.origin === 'redo') {
             enforceRestrictions(instance, change);
@@ -307,10 +293,8 @@ function CodeEditor(textAreaDomID, width, height, game) {
 
         this.internalEditor.setSize(width, height);
 
-        // set up event handlers
-
         this.internalEditor.on("focus", function(instance) {
-            // implements yellow box when changing focus
+            
             $('.CodeMirror').addClass('focus');
             $('#screen canvas').removeClass('focus');
 
@@ -319,11 +303,8 @@ function CodeEditor(textAreaDomID, width, height, game) {
         });
 
         this.internalEditor.on('cursorActivity', function (instance) {
-            // fixes the cursor lag bug
             instance.refresh();
 
-            // automatically smart-indent if the cursor is at position 0
-            // and the line is empty (ignore if backspacing)
             if (lastChange.origin !== '+delete') {
                 var loc = instance.getCursor();
                 if (loc.ch === 0 && instance.getLine(loc.line).trim() === "") {
@@ -336,14 +317,7 @@ function CodeEditor(textAreaDomID, width, height, game) {
         this.internalEditor.on('change', trackUndoRedo);
     }
 
-    // loads code into editor
     this.loadCode = function(codeString) {
-        /*
-         * logic: before setting the value of the editor to the code string,
-         * we run it through setEditableLines and setEditableSections, which
-         * strip our notation from the string and as a side effect build up
-         * a data structure of editable areas
-         */
 
         this.internalEditor.off('beforeChange', enforceRestrictions);
         codeString = preprocess(codeString);
@@ -355,7 +329,7 @@ function CodeEditor(textAreaDomID, width, height, game) {
         this.internalEditor.clearHistory();
     };
 
-    // marks uneditable lines within editor
+    
     this.markUneditableLines = function() {
         var instance = this.internalEditor;
         for (var i = 0; i < instance.lineCount(); i++) {
@@ -365,7 +339,6 @@ function CodeEditor(textAreaDomID, width, height, game) {
         }
     }
 
-    // marks editable sections inside uneditable lines within editor
     var markEditableSections = function(instance) {
         $('.editableSection').removeClass('editableSection');
         for (var line in editableSections) {
@@ -381,24 +354,21 @@ function CodeEditor(textAreaDomID, width, height, game) {
         }
     }
 
-    // returns all contents
+   
     this.getCode = function (forSaving) {
         var lines = this.internalEditor.getValue().split('\n');
 
         if (!forSaving && startOfStartLevel) {
-            // insert the end of startLevel() marker at the appropriate location
+           
             lines.splice(startOfStartLevel, 0, "map._startOfStartLevelReached()");
         }
 
         if (!forSaving && endOfStartLevel) {
-            // insert the end of startLevel() marker at the appropriate location
             lines.splice(endOfStartLevel+1, 0, "map._endOfStartLevelReached()");
         }
 
         return lines.join('\n');
     }
-
-    // returns only the code written in editable lines and sections
     this.getPlayerCode = function () {
         var code = '';
         for (var i = 0; i < this.internalEditor.lineCount(); i++) {
@@ -423,7 +393,6 @@ function CodeEditor(textAreaDomID, width, height, game) {
     }
 
     this.setCode = function(code) {
-        // make sure we're not saving the hidden START/END_OF_START_LEVEL lines
         code = code.split('\n').filter(function (line) {
             return line.indexOf('OfStartLevelReached') < 0;
         }).join('\n');
@@ -486,5 +455,5 @@ function CodeEditor(textAreaDomID, width, height, game) {
         this.internalEditor.focus();
     }
 
-    this.initialize(); // run initialization code
+    this.initialize();
 }
