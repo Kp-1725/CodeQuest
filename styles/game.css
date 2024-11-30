@@ -559,7 +559,7 @@ and (min-height : 1100px) {
 	}
 }
 
-/* if height too low, drop the paypal/github crap */
+
 @media only screen
 and (max-height : 650px) {
 	#forkMe, #paypal, #licensing {
@@ -567,7 +567,6 @@ and (max-height : 650px) {
 	}
 }
 
-/* as above, on portrait displays */
 @media only screen
 and (max-width : 1200px)
 and (min-height : 1100px)
