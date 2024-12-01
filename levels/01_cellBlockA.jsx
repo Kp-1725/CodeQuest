@@ -12,7 +12,7 @@
  * cellBlockA.js *
  *****************
  *
- * Good morning, Dr. Eval.
+ * Good morning, Player.
  *
  * It wasn't easy, but I've managed to get your computer down
  * to you. This system might be unfamiliar, but the underlying
